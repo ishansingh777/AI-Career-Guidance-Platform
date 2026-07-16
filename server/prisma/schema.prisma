@@ -1,0 +1,370 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id              Int               @id @default(autoincrement())
+  email           String            @unique
+  name            String?
+  password        String
+  avatarUrl       String?
+  bio             String?
+  role            Role              @default(USER)
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  aiInteractions  AIInteraction[]
+  assessments     Assessment[]
+  chats           Chat[]
+  recommendations Recommendation[]
+  roadmapProgress RoadmapProgress[]
+  savedCareers    SavedCareer[]
+  userSkills      UserSkill[]
+
+  @@index([createdAt])
+}
+
+model Skill {
+  id           Int           @id @default(autoincrement())
+  name         String        @unique
+  createdAt    DateTime      @default(now())
+  careerSkills CareerSkill[]
+  userSkills   UserSkill[]
+
+  @@index([name])
+}
+
+model Career {
+  id                  Int               @id @default(autoincrement())
+  slug                String            @unique
+  title               String
+  category            String
+  description         String?
+
+  // Structured recommendation fields
+  requiredSkills      String[]          @default([])
+  preferredInterests  String[]          @default([])
+  requiredSubjects    String[]          @default([])
+  personalityTraits   String[]          @default([])
+  workEnvironment     String?           // e.g., "Remote-first", "Hands-on", "Research-heavy"
+
+  salaryIndiaMin      Int?
+  salaryIndiaMax      Int?
+  salaryGlobalMin     Int?
+  salaryGlobalMax     Int?
+
+  futureDemand        Int?             // 1-10
+  automationRisk      Int?             // 1-10
+  growthRate          Int?             // %
+
+  dailyWork           String?
+
+  roadmap             Json?
+  learningResources   Json?
+  certifications      String[]         @default([])
+  projectIdeas        String[]         @default([])
+  companiesHiring     String[]         @default([])
+
+  image               String?
+  profile             Json?
+
+  createdAt           DateTime         @default(now())
+  updatedAt           DateTime         @updatedAt
+
+  // Relations
+  careerSkills        CareerSkill[]
+  recommendations     Recommendation[]
+  roadmaps            Roadmap[]
+  savedByUsers        SavedCareer[]
+
+  @@index([title])
+  @@index([createdAt])
+}
+
+
+model CareerSkill {
+  id       Int    @id @default(autoincrement())
+  careerId Int
+  skillId  Int
+  weight   Int    @default(1)
+  career   Career @relation(fields: [careerId], references: [id], onDelete: Cascade)
+  skill    Skill  @relation(fields: [skillId], references: [id], onDelete: Cascade)
+
+  @@unique([careerId, skillId])
+  @@index([skillId])
+}
+
+model UserSkill {
+  id      Int   @id @default(autoincrement())
+  userId  Int
+  skillId Int
+  level   Int?
+  meta    Json?
+  skill   Skill @relation(fields: [skillId], references: [id], onDelete: Cascade)
+  user    User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, skillId])
+  @@index([userId])
+}
+
+model AssessmentTemplate {
+  id          Int          @id @default(autoincrement())
+  key         String       @unique
+  title       String
+  description String?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  assessments Assessment[]
+  questions   Question[]
+}
+
+model Question {
+  id         Int                  @id @default(autoincrement())
+  templateId Int?
+  text       String
+  type       QuestionType         @default(MULTIPLE_CHOICE)
+  options    Json?
+  weight     Int                  @default(1)
+  meta       Json?
+  responses  AssessmentResponse[]
+  template   AssessmentTemplate?  @relation(fields: [templateId], references: [id], onDelete: Cascade)
+
+  @@index([templateId])
+}
+
+model Assessment {
+  id         Int                  @id @default(autoincrement())
+  userId     Int?
+  templateId Int?
+  title      String?
+  score      Float?
+  completed  Boolean              @default(false)
+  createdAt  DateTime             @default(now())
+  updatedAt  DateTime             @updatedAt
+  template   AssessmentTemplate?  @relation(fields: [templateId], references: [id])
+  user       User?                @relation(fields: [userId], references: [id])
+  responses  AssessmentResponse[]
+
+  @@index([userId, createdAt])
+}
+
+model AssessmentResponse {
+  id           Int        @id @default(autoincrement())
+  assessmentId Int
+  questionId   Int
+  answer       Json
+  score        Float?
+  meta         Json?
+  createdAt    DateTime   @default(now())
+  assessment   Assessment @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
+  question     Question   @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@index([assessmentId])
+  @@index([questionId])
+}
+
+model Recommendation {
+  id        Int                  @id @default(autoincrement())
+  userId    Int
+  careerId  Int
+  score     Float
+  source    RecommendationSource
+  reason    String?
+  meta      Json?
+  createdAt DateTime             @default(now())
+  messages  Message[]
+  career    Career               @relation(fields: [careerId], references: [id], onDelete: Cascade)
+  user      User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, careerId, source])
+  @@index([userId, score])
+  @@index([careerId])
+}
+
+model SavedCareer {
+  id       Int      @id @default(autoincrement())
+  userId   Int
+  careerId Int
+  note     String?
+  tags     String[] @default([])
+  savedAt  DateTime @default(now())
+  career   Career   @relation(fields: [careerId], references: [id], onDelete: Cascade)
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, careerId])
+  @@index([userId])
+}
+
+model Roadmap {
+  id          Int           @id @default(autoincrement())
+  careerId    Int?
+  title       String
+  description String?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  career      Career?       @relation(fields: [careerId], references: [id], onDelete: Cascade)
+  items       RoadmapItem[]
+
+  @@index([careerId])
+}
+
+model RoadmapItem {
+  id          Int                   @id @default(autoincrement())
+  roadmapId   Int
+  seq         Int
+  title       String
+  description String?
+  durationMin Int?
+  difficulty  Difficulty?
+  createdAt   DateTime              @default(now())
+  updatedAt   DateTime              @updatedAt
+  roadmap     Roadmap               @relation(fields: [roadmapId], references: [id], onDelete: Cascade)
+  resources   RoadmapItemResource[]
+  progress    RoadmapProgress[]
+
+  @@index([roadmapId, seq])
+}
+
+model LearningResource {
+  id           Int                   @id @default(autoincrement())
+  title        String
+  url          String
+  type         ResourceType          @default(ARTICLE)
+  description  String?
+  provider     String?
+  difficulty   Difficulty?
+  durationMin  Int?
+  tags         String[]              @default([])
+  createdAt    DateTime              @default(now())
+  updatedAt    DateTime              @updatedAt
+  roadmapItems RoadmapItemResource[]
+
+  @@index([url], map: "idx_learningresource_url")
+  @@index([title])
+}
+
+model RoadmapItemResource {
+  id            Int              @id @default(autoincrement())
+  roadmapItemId Int
+  resourceId    Int
+  note          String?
+  createdAt     DateTime         @default(now())
+  resource      LearningResource @relation(fields: [resourceId], references: [id], onDelete: Cascade)
+  roadmapItem   RoadmapItem      @relation(fields: [roadmapItemId], references: [id], onDelete: Cascade)
+
+  @@unique([roadmapItemId, resourceId])
+  @@index([resourceId])
+}
+
+model RoadmapProgress {
+  id            Int         @id @default(autoincrement())
+  userId        Int
+  roadmapItemId Int
+  status        String
+  percent       Int?
+  startedAt     DateTime?
+  completedAt   DateTime?
+  updatedAt     DateTime    @updatedAt
+  createdAt     DateTime    @default(now())
+  roadmapItem   RoadmapItem @relation(fields: [roadmapItemId], references: [id], onDelete: Cascade)
+  user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, roadmapItemId])
+  @@index([userId])
+  @@index([roadmapItemId])
+}
+
+model Chat {
+  id             Int             @id @default(autoincrement())
+  userId         Int?
+  title          String?
+  context        Json?
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  aiInteractions AIInteraction[]
+  user           User?           @relation(fields: [userId], references: [id])
+  messages       Message[]
+
+  @@index([userId, createdAt])
+}
+
+model Message {
+  id               Int             @id @default(autoincrement())
+  chatId           Int
+  role             MessageRole
+  content          String
+  contentJson      Json?
+  createdAt        DateTime        @default(now())
+  meta             Json?
+  recommendationId Int?
+  chat             Chat            @relation(fields: [chatId], references: [id], onDelete: Cascade)
+  recommendation   Recommendation? @relation(fields: [recommendationId], references: [id])
+
+  @@index([chatId, createdAt])
+  @@index([role])
+}
+
+model AIInteraction {
+  id        Int      @id @default(autoincrement())
+  userId    Int?
+  chatId    Int?
+  prompt    String
+  response  Json
+  model     String?
+  meta      Json?
+  createdAt DateTime @default(now())
+  chat      Chat?    @relation(fields: [chatId], references: [id], onDelete: Cascade)
+  user      User?    @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([chatId])
+}
+
+model RevokedToken {
+  id        Int      @id @default(autoincrement())
+  token     String   @unique
+  createdAt DateTime @default(now())
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum QuestionType {
+  MULTIPLE_CHOICE
+  SCALE
+  OPEN_ENDED
+}
+
+enum RecommendationSource {
+  ASSESSMENT
+  AI
+  HYBRID
+  MANUAL
+}
+
+enum MessageRole {
+  SYSTEM
+  USER
+  ASSISTANT
+}
+
+enum ResourceType {
+  ARTICLE
+  VIDEO
+  COURSE
+  BOOK
+  TOOL
+  OTHER
+}
+
+enum Difficulty {
+  BEGINNER
+  INTERMEDIATE
+  ADVANCED
+}
