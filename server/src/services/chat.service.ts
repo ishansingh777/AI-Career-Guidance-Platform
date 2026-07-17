@@ -66,15 +66,15 @@ export class ChatService {
         });
 
     const baseRecommendations: RecommendationContext[] = freshRecommendations.length
-      ? freshRecommendations.map((r) => ({
+      ? freshRecommendations.map((r: typeof freshRecommendations[number]) => ({
           title: r.title,
           slug: r.slug,
           score: r.score,
           reason: r.reason,
         }))
       : latestRecommendations
-          .filter((r) => r.career)
-          .map((r) => ({
+          .filter((r: typeof latestRecommendations[number]) => r.career)
+          .map((r: typeof latestRecommendations[number]) => ({
             title: r.career.title,
             slug: r.career.slug,
             score: r.score,
@@ -103,12 +103,11 @@ export class ChatService {
         })
       : [];
 
-    const recommendationCareerBySlug = new Map(recommendationCareers.map((career) => [career.slug, career]));
-    const recommendations: RecommendationContext[] = baseRecommendations.map((recommendation) => ({
-      ...recommendation,
-      ...(recommendationCareerBySlug.get(recommendation.slug) ?? {}),
-    }));
-
+const recommendationCareerBySlug = new Map(
+  recommendationCareers.map(
+    (career: typeof recommendationCareers[number]) => [career.slug, career]
+  )
+);
     const user = await prisma.user.findUnique({
       where: { id: userId as any },
       select: { id: true, email: true, name: true },
@@ -165,7 +164,9 @@ export class ChatService {
         salaryIndiaMax: career.salaryIndiaMax,
         salaryGlobalMin: career.salaryGlobalMin,
         salaryGlobalMax: career.salaryGlobalMax,
-        recommendationReason: recommendations.find((r) => r.slug === career.slug)?.reason ?? null,
+        recommendationReason:
+          baseRecommendations.find((r: RecommendationContext) => r.slug === career.slug)
+            ?.reason ?? null,
       };
     }
 
@@ -208,7 +209,7 @@ export class ChatService {
             })),
           }
         : null,
-      recommendations,
+      recommendations: baseRecommendations,
       selectedCareer,
       conversationHistory,
       question: message,
