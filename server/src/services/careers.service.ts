@@ -99,7 +99,7 @@ export async function getCareerDetails({ slug }: { slug: string }):
     image: career.image ?? null,
 
     reason,
-    relatedCareers: relatedCareersRaw.slice(0, 6).map((c) => ({
+    relatedCareers: relatedCareersRaw.slice(0, 6).map((c: typeof relatedCareersRaw[number]) => ({
       title: c.title,
       slug: c.slug,
       image: c.image ?? null,

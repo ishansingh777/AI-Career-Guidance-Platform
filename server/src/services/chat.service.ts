@@ -202,11 +202,13 @@ const recommendationCareerBySlug = new Map(
             title: assessment.title,
             score: assessment.score,
             completedAt: assessment.updatedAt ? assessment.updatedAt.toISOString() : null,
-            responses: (assessment.responses ?? []).map((r) => ({
-              questionId: r.questionId,
-              answer: r.answer,
-              score: r.score,
-            })),
+            responses: (assessment.responses ?? []).map(
+              (r: (typeof assessment.responses)[number]) => ({
+                questionId: r.questionId,
+                answer: r.answer,
+                score: r.score,
+              })
+            ),
           }
         : null,
       recommendations: baseRecommendations,
