@@ -17,6 +17,7 @@ import NotFound from "./pages/NotFound";
 import ProtectedRoute from "./routes/ProtectedRoute";
 import SkillGapPage from "./pages/SkillGap";
 import CompareCareers from "./pages/CompareCareers";
+import SavedCareersPage from "./pages/SavedCareers";
 
 
 import { Badge } from "./components/common/Badge";
