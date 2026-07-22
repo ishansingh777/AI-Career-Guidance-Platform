@@ -40,7 +40,8 @@ export default function CompareCareers() {
 
   const [careerASlug, setCareerASlug] = useState<string>("");
   const [careerBSlug, setCareerBSlug] = useState<string>("");
-
+  const [careerA, setCareerA] = useState<CareerDetailsResponse | null>(null);
+  const [careerB, setCareerB] = useState<CareerDetailsResponse | null>(null);
 
   const [savedVersion, setSavedVersion] = useState(0);
 
