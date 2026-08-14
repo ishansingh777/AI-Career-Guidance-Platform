@@ -1,8 +1,32 @@
-import type { AIProvider, CareerQuestionInput, CareerQuestionOutput } from "./provider.js";
+import type { 
+  AIProvider, 
+  CareerQuestionInput, 
+  CareerQuestionOutput,
+  CareerAdviceInput,
+  CareerAdviceOutput,
+  RoadmapInput,
+  RoadmapOutput 
+} from "./provider.js";
 
 export class MockAIProvider implements AIProvider {
+  async generateCareerAdvice(input: CareerAdviceInput): Promise<CareerAdviceOutput> {
+    return {
+      careerAdvice: "[Mock AI] Focus on building core skills based on your assessment.",
+      keySkills: ["Skill 1", "Skill 2"],
+      nextSteps: [{ week: "Week 1", actions: ["Action 1", "Action 2"] }],
+      risksAndMitigations: []
+    };
+  }
+
+  async generateRoadmap(input: RoadmapInput): Promise<RoadmapOutput> {
+    return {
+      roadmap: [
+        { phase: "Phase 1: Foundation", duration: "1 month", goals: ["Goal 1"] }
+      ]
+    };
+  }
+
   async answerCareerQuestion(input: CareerQuestionInput): Promise<CareerQuestionOutput> {
-    // A simple mock response
     const keyword = input.question.toLowerCase();
     let answer = "That's a great question! Based on your profile and the current market trends, I suggest focusing on building practical projects and expanding your foundational knowledge.";
 
