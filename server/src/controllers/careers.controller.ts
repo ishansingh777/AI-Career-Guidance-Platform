@@ -1,5 +1,15 @@
 import { Request, Response } from "express";
-import { getCareerDetails } from "../services/careers.service.js";
+import { getCareerDetails, getAllCareers as fetchAllCareers } from "../services/careers.service.js";
+
+export async function getAllCareers(req: Request, res: Response) {
+  try {
+    const careers = await fetchAllCareers();
+    return res.status(200).json(careers);
+  } catch (err: any) {
+    console.error(err);
+    return res.status(500).json({ error: err?.message || "Server error" });
+  }
+}
 
 export async function getCareerBySlug(req: Request, res: Response) {
   try {

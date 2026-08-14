@@ -39,6 +39,24 @@ function safeJsonToObject(value: unknown): Record<string, unknown> {
   return {};
 }
 
+export async function getAllCareers() {
+  return await prisma.career.findMany({
+    select: {
+      slug: true,
+      title: true,
+      category: true,
+      description: true,
+      futureDemand: true,
+      automationRisk: true,
+      growthRate: true,
+      salaryIndiaMin: true,
+      salaryIndiaMax: true,
+      requiredSkills: true,
+      image: true,
+    }
+  });
+}
+
 export async function getCareerDetails({ slug }: { slug: string }):
   Promise<CareerDetailsResponse | null> {
   // 1) Fetch career by slug
@@ -99,7 +117,9 @@ export async function getCareerDetails({ slug }: { slug: string }):
     image: career.image ?? null,
 
     reason,
-    relatedCareers: relatedCareersRaw.slice(0, 6).map((c: typeof relatedCareersRaw[number]) => ({
+    relatedCareers: relatedCareersRaw
+    .slice(0, 6)
+    .map((c: (typeof relatedCareersRaw)[number]) => ({
       title: c.title,
       slug: c.slug,
       image: c.image ?? null,

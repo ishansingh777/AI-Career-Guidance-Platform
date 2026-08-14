@@ -32,3 +32,5 @@ Thumbs.db
 
 # Prisma temp
 server/tmp/
+
+client/.env.production
